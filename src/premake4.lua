@@ -1,43 +1,27 @@
 solution "mod_tools"
-	configurations { "debug", "release" }
+	configurations { "Debug", "Release" }
 	location  "../project"
 	targetdir "../bin"
-	flags { "NoEditAndContinue", "NoPCH" }
-	includedirs { "include" }
-	libdirs { "lib" }
 
-	vpaths
-	{
-		["headers/*"] = { "**.h", "**.hpp" },
-		["sources/*"] = { "**.c", "**.cpp" }
-	}
-
-	configuration "debug"
+	configuration "Debug"
 		targetdir "../bin/debug"
 		defines   "DEBUG"
-		flags     { "Symbols" }
-	configuration "release"
+	configuration "Release"
 		targetdir "../bin/release"
 		defines   "RELEASE"
-	configuration "vs*"
-		defines   { "_CRT_SECURE_NO_WARNINGS" }
 
 
 project "unstuff"
 	targetname "unstuff"
-	language   "C++"
+	language   "C#"
 	kind       "ConsoleApp"
+	defines   { "TRACE" }
+	files { "app/unstuff/**.cs" }
+	links { "System", "System.Core", "Microsoft.CSharp" }
 
-	configuration "release"
-		flags "OptimizeSpeed" -- sonic
-
-	files
-	{
-		"app/unstuff/**.cpp"
-	}
-
-	configuration "windows"
-		links { "ole32" }
+    configuration { "Debug*" }
+      defines { "DEBUG" }
+      flags   { "Symbols" }
 
 
 if _ACTION == "clean" then
