@@ -1,5 +1,5 @@
 solution "mod_tools"
-	configurations { "release", "debug" }
+	configurations { "debug", "release" }
 	location  "../project"
 	targetdir "../bin"
 	flags { "NoEditAndContinue", "NoPCH" }
@@ -25,15 +25,22 @@ solution "mod_tools"
 
 project "unstuff"
 	targetname "unstuff"
-	language   "C"
+	language   "C++"
 	kind       "ConsoleApp"
 
 	configuration "release"
-		optimize "Speed" -- sonic
+		flags "OptimizeSpeed" -- sonic
 
 	files
 	{
-		"app/unstuff/**.h",
-		"app/unstuff/**.c"
+		"app/unstuff/**.cpp"
 	}
 
+	configuration "windows"
+		links { "ole32" }
+
+
+if _ACTION == "clean" then
+	os.rmdir("../bin")
+	os.rmdir("../project")
+end

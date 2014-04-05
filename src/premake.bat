@@ -1,1 +1,2 @@
-..\tools\bin\win32\premake5.exe vs2012
+..\tools\bin\win32\premake4.exe clean
+..\tools\bin\win32\premake4.exe vs2012

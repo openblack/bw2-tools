@@ -1,1 +1,2 @@
-../tools/bin/linux/premake5 gmake
+../tools/bin/linux/premake4 clean
+../tools/bin/linux/premake4 gmake
