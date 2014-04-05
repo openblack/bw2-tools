@@ -1,1 +1,1 @@
-..\tools\bin\linux\premake5 gmake
+../tools/bin/linux/premake5 gmake
