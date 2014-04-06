@@ -159,7 +159,9 @@ namespace ScriptReader
                         Output.WriteLine("\tv3dpush\t{0}", i.Parameter.ReadInt32());
                         break;
                     case 26:
-                        Output.WriteLine("\tcall\t{0}\t; this is a scriptid", i.Parameter.ReadInt32());
+                        int scriptID = i.Parameter.ReadInt32();
+                        string scriptName = Array.Find(CHLFile.FunctionTable, p => p.ScriptID == scriptID).Name;
+                        Output.WriteLine("\tcall\t{0}", scriptName);
                         break;
                     case 27:
                         Output.WriteLine("\t{0}stack", ((i.SubType == 1) ? "rcl" : "sav"));
