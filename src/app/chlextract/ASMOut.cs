@@ -82,7 +82,7 @@ namespace ScriptReader
                                 Output.WriteLine("\tpushb\t{0}", (i.Parameter.ReadInt32() == 1).ToString());
                                 break;
                             case 7:
-                                Output.WriteLine("\tpushv\t[{0}]", i.Parameter.ReadSingle());
+                                Output.WriteLine("\tpushv\t{0}", i.Parameter.ReadSingle());
                                 break;
                             default:
                                 Output.WriteLine("\tpush?\t{0}", i.Parameter.ReadInt32());
@@ -90,7 +90,7 @@ namespace ScriptReader
                         }
                         break;
                     case 3:
-                        Output.WriteLine("\tpop\t{0}", (i.SubType == 2) ? "[" + i.Parameter.ReadInt32() + "]" : "");
+                        Output.WriteLine("\tpop\t{0}", (i.SubType == 2) ? i.Parameter.ReadInt32().ToString() : "");
                         break;
                     case 5:
                         Output.WriteLine("\tengcall\t{0}", i.Parameter.ReadInt32());
@@ -164,6 +164,9 @@ namespace ScriptReader
                     case 27:
                         Output.WriteLine("\t{0}stack", ((i.SubType == 1) ? "rcl" : "sav"));
                         break;
+                    case 29:
+                        Output.WriteLine("\texcept"); // 29 1 1 0
+                        break;
                     case 34:
                         Output.WriteLine("\ttarget");
                         break;
@@ -182,9 +185,28 @@ namespace ScriptReader
                     case 40:
                         Output.WriteLine("\tcos");
                         break;
-                    default:
-                        Output.WriteLine("\t; Unknown: {0}, {1}", i.Type, i.Parameter.ReadInt32());
+                    case 41:
+                        Output.WriteLine("\tarctan");
                         break;
+                    case 42:
+                        Output.WriteLine("\tarcsin");
+                        break;
+                    case 43:
+                        Output.WriteLine("\tarccos");
+                        break;
+                    case 44:
+                        Output.WriteLine("\tarctan2");
+                        break;
+                    case 45:
+                        Output.WriteLine("\tsqrt");
+                        break;
+                    case 46:
+                        Output.WriteLine("\tabs");
+                        break;
+                    default:
+                        Output.WriteLine("\tunk\t{0}\t{1}\t{2}\t{3} ; Unknown!", i.Type, i.SubType, i.DataType, i.Parameter.ReadInt32());
+                        break;
+                    // 30, 32, 47
                 }
             });
         }
