@@ -10,49 +10,84 @@ namespace unstuff
 {
     class Program
     {
-        private const string usageText = "Usage: unstuff Everything.stuff outputdir";
+        struct FileDictionaryEntry
+        {
+            public string fileName;
+            public uint filePtr;
+            public uint fileLength;
+
+            public FileDictionaryEntry(BinaryReader reader)
+            {
+                this.fileName   = Encoding.ASCII.GetString(reader.ReadBytes(256)).Trim(new char[1]);
+                this.filePtr = reader.ReadUInt32();
+                this.fileLength = reader.ReadUInt32();
+                reader.ReadBytes(4);
+            }
+        }
+
+        private const string usageText = "Usage: unstuff [file.stuff] (outputdir)";
 
         public static int Main(string[] args)
         {
-            if (args.Length < 2)
+            if (args.Length < 1)
             {
                 Console.WriteLine(usageText);
                 return 1;
             }
 
-            string stuffFilePath = "D:\\Program Files (x86)\\Lionhead Studios\\Black & White 2\\Data\\Everything.stuff";
+            string inputFileName = args[0];
+            string outputDir = ""; // assume root
 
-            BinaryReader binaryReader = new BinaryReader((Stream)File.Open(stuffFilePath, FileMode.Open, FileAccess.Read));
-            binaryReader.BaseStream.Seek(-4L, SeekOrigin.End);
+            if (args.Length > 1)
+                outputDir = args[1];
 
-            Int32 TOC = binaryReader.ReadInt32();
-            if (TOC < 4 || TOC > binaryReader.BaseStream.Length - 32)
+            if (!File.Exists(inputFileName))
             {
-                Console.WriteLine("Invalid TOC");
-                throw new Exception();
+                Console.WriteLine("Couldn't find specified file: {0}", inputFileName);
+                return 1;
             }
 
-            Int32 fileLength = (int)binaryReader.BaseStream.Length;
-            Int32 dicLength = (int)binaryReader.BaseStream.Length - TOC - 4;
-            Int32 numEntries = dicLength / 0x10C;
+            var inputFileStream = File.Open(inputFileName, FileMode.Open, FileAccess.Read);
+
+            var reader = new BinaryReader(inputFileStream);
+            reader.BaseStream.Seek(-4L, SeekOrigin.End);
+
+            var TOC = reader.ReadUInt32();
+            if (TOC < 4 || TOC > reader.BaseStream.Length - 32)
+            {
+                Console.WriteLine("Invalid TOC");
+                return 1;
+            }
+
+            var fileLength = reader.BaseStream.Length;
+            var dicLength = reader.BaseStream.Length - TOC - 4;
+            var numEntries = dicLength / 0x10C;
 
             Console.WriteLine("\t({0} bytes, TOC = {1}, {2} entries)", fileLength, TOC, numEntries);
 
-            binaryReader.BaseStream.Seek(TOC, SeekOrigin.Begin);
+            reader.BaseStream.Seek(TOC, SeekOrigin.Begin);
+
+            var fileDictionary = new FileDictionaryEntry[numEntries];
+
+            for (int i = 0; i < numEntries; i++)
+                fileDictionary[i] = new FileDictionaryEntry(reader);
 
             for (int i = 0; i < numEntries; i++)
             {
-                string str = Encoding.ASCII.GetString(binaryReader.ReadBytes(256)).Trim(new char[1]);
-                int num1 = (int)binaryReader.ReadUInt32();
-                int num3 = binaryReader.ReadInt32();
-                var num2 = binaryReader.ReadBytes(4);
-                Console.WriteLine("{0} : {1} {2} {3}", str, num1, num3, num1 + num3);
+                var entry = fileDictionary[i];
+                Console.WriteLine(" {0, -4} : {1}", i, entry.fileName);
+
+                Directory.CreateDirectory(Path.GetDirectoryName(outputDir + "/" + entry.fileName));
+                var outputFile = File.OpenWrite(outputDir + "/" + entry.fileName);
+
+                reader.BaseStream.Seek(entry.filePtr, SeekOrigin.Begin);
+                outputFile.Write(reader.ReadBytes((int)entry.fileLength), 0, (int)entry.fileLength);
+
+                outputFile.Close();
             }
 
-            Console.WriteLine("Done.");
-            binaryReader.Close();
-
-            Console.ReadLine();
+            reader.Close();
+            inputFileStream.Close();
 
             return 0;
         }
