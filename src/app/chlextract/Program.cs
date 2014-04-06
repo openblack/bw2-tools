@@ -13,9 +13,9 @@ namespace ScriptReader
     {
         static void Main(string[] args)
         {
-            var chlFile = ChallengeFile.LoadFromStream(new FileStream(args[1], FileMode.Open));
+            var chlFile = ChallengeFile.LoadFromStream(new FileStream(args[0], FileMode.Open));
 
-            var file = File.CreateText(args[2]);
+            var file = File.CreateText(args[1]);
             ASMOut.Convert(chlFile, file);
             file.Close();
         }
