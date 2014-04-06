@@ -16,13 +16,24 @@ project "unstuff"
 	language   "C#"
 	kind       "ConsoleApp"
 	defines   { "TRACE" }
-	files { "app/unstuff/**.cs" }
+	files { "app/unstuff/**" }
 	links { "System", "System.Core", "Microsoft.CSharp" }
 
     configuration { "Debug*" }
       defines { "DEBUG" }
       flags   { "Symbols" }
 
+project "chlextract"
+	targetname "chlex"
+	language   "C#"
+	kind       "ConsoleApp"
+	defines   { "TRACE" }
+	files { "app/chlextract/**" }
+	links { "System", "System.Core", "Microsoft.CSharp" }
+
+    configuration { "Debug*" }
+      defines { "DEBUG" }
+      flags   { "Symbols" }
 
 if _ACTION == "clean" then
 	os.rmdir("../bin")
