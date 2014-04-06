@@ -69,20 +69,31 @@ namespace ScriptReader
                     case 2: // push*
                         switch (i.DataType)
                         {
-                            case 1:
+                            case 1: // int
                                 Output.WriteLine("\tpushi\t{0}", i.Parameter.ReadInt32());
                                 break;
-                            case 2:
+                            case 2: // float
                                 Output.WriteLine("\tpushf\t{0}", i.Parameter.ReadSingle());
                                 break;
-                            case 3:
+                            case 3: // pushv3d
                                 Output.WriteLine("\tpushv3d");
+                                break;
+                            case 4: // pushobj
+                                Output.WriteLine("\tpushobj\t{0}", i.Parameter.ReadInt32());
                                 break;
                             case 6:
                                 Output.WriteLine("\tpushb\t{0}", (i.Parameter.ReadInt32() == 1).ToString());
                                 break;
                             case 7:
-                                Output.WriteLine("\tpushv\t{0}", i.Parameter.ReadSingle());
+
+                                var param = (int)i.Parameter.ReadSingle() - 1 - func.VariableOffset;
+
+                                if (0 <= param && param < func.LocalVariables.Length)
+                                    Output.WriteLine("\tpushv\t{0}; {1} {2} {3}", func.LocalVariables[param], param, i.SubType, i.DataType);
+                                else
+                                    Output.WriteLine("\tpushv\t{0}; {1} {2}", param, i.SubType, i.DataType);
+
+
                                 break;
                             default:
                                 Output.WriteLine("\tpush?\t{0}", i.Parameter.ReadInt32());
@@ -90,7 +101,31 @@ namespace ScriptReader
                         }
                         break;
                     case 3:
-                        Output.WriteLine("\tpop\t{0}", (i.SubType == 2) ? i.Parameter.ReadInt32().ToString() : "");
+                        switch (i.DataType)
+                        {
+                            case 1: // popi
+                                Output.WriteLine("\tpopi");
+                                break;
+                            case 2: // popf
+                                if (i.SubType == 2)
+                                {
+                                    var param = i.Parameter.ReadInt32() - 1 - func.VariableOffset;
+
+                                    if (0 <= param && param < func.LocalVariables.Length)
+                                        Output.WriteLine("\tpopf\t{0}; {1}", func.LocalVariables[param], param);
+                                    else
+                                        Output.WriteLine("\tpopf\t{0}", param);
+                                }
+                                else
+                                    Output.WriteLine("\tpopf");
+                                break;
+                            case 4: // popo
+                                Output.WriteLine("\tpopo");
+                                break;
+                            default:
+                                Output.WriteLine("\tpop\tUNKNOWN");
+                                break;
+                        }
                         break;
                     case 5:
                         Output.WriteLine("\tengcall\t{0}", i.Parameter.ReadInt32());
@@ -216,6 +251,10 @@ namespace ScriptReader
         private static void ParseFunction(ChallengeFile.Function func)
         {
             Output.WriteLine("function {0}", func.Name);
+            Output.WriteLine("; # of Parameters: {0}", func.NumParameters);
+            Output.WriteLine("; Source File: {0}", func.SourceFile);
+            Output.WriteLine("; Script ID: {0}", func.ScriptID);
+            Output.WriteLine("; Var Offset: {0}", func.VariableOffset);
 
             // Locals
             Output.WriteLine("locals");
