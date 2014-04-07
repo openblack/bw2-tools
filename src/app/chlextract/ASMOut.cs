@@ -85,14 +85,12 @@ namespace ScriptReader
                                 Output.WriteLine("\tpushb\t{0}", (i.Parameter.ReadInt32() == 1).ToString());
                                 break;
                             case 7:
-
                                 var param = (int)i.Parameter.ReadSingle() - 1 - func.VariableOffset;
 
                                 if (0 <= param && param < func.LocalVariables.Length)
-                                    Output.WriteLine("\tpushv\t{0}; {1} {2} {3}", func.LocalVariables[param], param, i.SubType, i.DataType);
+                                    Output.WriteLine("\tpushv\t{0}", func.LocalVariables[param]);
                                 else
-                                    Output.WriteLine("\tpushv\t{0}; {1} {2}", param, i.SubType, i.DataType);
-
+                                    Output.WriteLine("\tpushv\t{0}; FIXME {1} {2}", param, i.SubType, i.DataType);
 
                                 break;
                             default:
@@ -112,9 +110,9 @@ namespace ScriptReader
                                     var param = i.Parameter.ReadInt32() - 1 - func.VariableOffset;
 
                                     if (0 <= param && param < func.LocalVariables.Length)
-                                        Output.WriteLine("\tpopf\t{0}; {1}", func.LocalVariables[param], param);
+                                        Output.WriteLine("\tpopf\t{0}", func.LocalVariables[param]);
                                     else
-                                        Output.WriteLine("\tpopf\t{0}", param);
+                                        Output.WriteLine("\tpopf\t{0}; FIXME", param);
                                 }
                                 else
                                     Output.WriteLine("\tpopf");
@@ -256,23 +254,40 @@ namespace ScriptReader
             Output.WriteLine("; Script ID: {0}", func.ScriptID);
             Output.WriteLine("; Var Offset: {0}", func.VariableOffset);
 
-            // Locals
+            #region Locals
+            List<LGVariable> sortedVars = new List<LGVariable>();
+            Array.ForEach(func.LocalVariables, x =>
+            {
+                if (x == "LHVMA")
+                    sortedVars[sortedVars.Count - 1] = new LGVariable(sortedVars[sortedVars.Count - 1].Name, sortedVars[sortedVars.Count - 1].Count + 1);
+                else
+                    sortedVars.Add(new LGVariable(x, 1));
+            });
+
             Output.WriteLine("locals");
-            Array.ForEach(func.LocalVariables, x => Output.WriteLine("\t{0}", x));
+            sortedVars.ForEach(x => Output.WriteLine("\t{0}", x));
             Output.WriteLine("endl");
+            #endregion
 
             // Instructions
             Output.WriteLine("begin");
-
             ParseInstructions(func);
-
             Output.WriteLine("end");
         }
 
         private static void OutputGlobals()
         {
+            List<LGVariable> sortedVars = new List<LGVariable>();
+            Array.ForEach(CHLFile.GlobalTable, x =>
+            {
+                if (x == "LHVMA")
+                    sortedVars[sortedVars.Count - 1] = new LGVariable(sortedVars[sortedVars.Count - 1].Name, sortedVars[sortedVars.Count - 1].Count + 1);
+                else
+                    sortedVars.Add(new LGVariable(x, 1));
+            });
+
             Output.WriteLine("globals");
-            Array.ForEach(CHLFile.GlobalTable, x => Output.WriteLine("\t{0}", x));
+            sortedVars.ForEach(x => Output.WriteLine("\t{0}", x));
             Output.WriteLine("endg");
         }
 
@@ -280,5 +295,23 @@ namespace ScriptReader
         {
             Output.Write("; Generated using CHLEX" + Environment.NewLine + Environment.NewLine);
         }
+
+        struct LGVariable
+        {
+            public string Name;
+            public int Count;
+
+            public LGVariable(string name, int count)
+            {
+                Name = name;
+                Count = count;
+            }
+
+            public override string ToString()
+            {
+                return (Count == 1) ? Name : Name + "[" + Count + "]";
+            }
+        }
+
     }
 }
