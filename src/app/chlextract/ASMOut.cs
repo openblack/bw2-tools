@@ -85,12 +85,13 @@ namespace ScriptReader
                                 Output.WriteLine("\tpushb\t{0}", (i.Parameter.ReadInt32() == 1).ToString());
                                 break;
                             case 7:
-                                var param = (int)i.Parameter.ReadSingle() - 1 - func.VariableOffset;
-
-                                if (0 <= param && param < func.LocalVariables.Length)
-                                    Output.WriteLine("\tpushv\t{0}", func.LocalVariables[param]);
+                                // there's a subtype on here we need to id too.
+                                var param = (int)i.Parameter.ReadSingle();
+ 
+                                if (param <= func.VariableOffset) // it's a global
+                                    Output.WriteLine("\tpushv\t{0}\t", CHLFile.GlobalTable[func.VariableOffset - 1]);
                                 else
-                                    Output.WriteLine("\tpushv\t{0}; FIXME {1} {2}", param, i.SubType, i.DataType);
+                                    Output.WriteLine("\tpushv\t{0}\t", func.LocalVariables[param - func.VariableOffset - 1]);
 
                                 break;
                             default:
@@ -107,12 +108,12 @@ namespace ScriptReader
                             case 2: // popf
                                 if (i.SubType == 2)
                                 {
-                                    var param = i.Parameter.ReadInt32() - 1 - func.VariableOffset;
+                                    var param = i.Parameter.ReadInt32();
 
-                                    if (0 <= param && param < func.LocalVariables.Length)
-                                        Output.WriteLine("\tpopf\t{0}", func.LocalVariables[param]);
+                                    if (param <= func.VariableOffset) // it's a global
+                                        Output.WriteLine("\tpopf\t{0}\t", CHLFile.GlobalTable[func.VariableOffset - 1]);
                                     else
-                                        Output.WriteLine("\tpopf\t{0}; FIXME", param);
+                                        Output.WriteLine("\tpopf\t{0}\t", func.LocalVariables[param - func.VariableOffset - 1]);
                                 }
                                 else
                                     Output.WriteLine("\tpopf");
